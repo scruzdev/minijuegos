@@ -1,0 +1,37 @@
+<main class="game-page">
+  <div class="game-shell">
+    <a class="back-link" routerLink="/">← Back to games</a>
+    <header class="game-heading">
+      <p class="eyebrow">Classic puzzle</p>
+      <h1>Minesweeper</h1>
+      <p>Clear the field without triggering a mine.</p>
+    </header>
+
+    <section class="minesweeper-panel" aria-label="Minesweeper game">
+      <div class="difficulty-row">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty" [value]="game.difficulty()" (change)="game.changeDifficulty($any($event.target).value)">
+          @for (difficulty of difficulties; track difficulty[0]) {
+            <option [value]="difficulty[0]">{{ difficulty[1].label }}</option>
+          }
+        </select>
+      </div>
+      <div class="scorebar">
+        <div class="digital-display" aria-label="Remaining mines">{{ formatCounter(game.remainingMines()) }}</div>
+        <button class="face-button" type="button" (click)="game.newGame()" [attr.aria-label]="'Restart game (' + game.status() + ')'">
+          {{ game.status() === 'won' ? '😎' : game.status() === 'lost' ? '😵' : '🙂' }}
+        </button>
+        <div class="digital-display" aria-label="Elapsed seconds">{{ formatTime(game.elapsedSeconds()) }}</div>
+      </div>
+      <app-minesweeper-board />
+      <p class="game-status" aria-live="polite">
+        @switch (game.status()) {
+          @case ('ready') { Tap a cell to begin. Long press to flag. }
+          @case ('playing') { Find every safe cell. }
+          @case ('won') { You cleared the field! }
+          @case ('lost') { Mine triggered. Try again. }
+        }
+      </p>
+    </section>
+  </div>
+</main>

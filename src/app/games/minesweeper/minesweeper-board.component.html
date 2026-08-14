@@ -1,0 +1,23 @@
+<div class="board-scroll" [class.board-scroll--expert]="game.configuration().columns > 16">
+  <div class="board" [style.--columns]="game.configuration().columns" role="grid" aria-label="Minesweeper board">
+    @for (row of game.board(); track $index; let rowIndex = $index) {
+      @for (cell of row; track cell.column) {
+        <button
+          class="cell"
+          [class.cell--revealed]="cell.isRevealed"
+          [class.cell--flagged]="cell.isFlagged"
+          [class.cell--mine]="cell.isMine && cell.isRevealed"
+          [class]="'cell cell--number-' + cell.adjacentMines"
+          type="button"
+          role="gridcell"
+          [attr.aria-label]="cell.isFlagged ? 'Flagged cell' : cell.isRevealed ? (cell.isMine ? 'Mine' : cell.adjacentMines + ' adjacent mines') : 'Hidden cell'"
+          (pointerdown)="onPointerDown($event, rowIndex, cell.column)"
+          (pointerup)="onPointerUp($event, rowIndex, cell.column)"
+          (pointermove)="onPointerMove($event)"
+          (pointercancel)="onPointerCancel()"
+          (contextmenu)="onRightClick($event, rowIndex, cell.column)"
+        >{{ cell.isFlagged ? '⚑' : cell.isRevealed ? (cell.isMine ? '💣' : cell.adjacentMines || '') : '' }}</button>
+      }
+    }
+  </div>
+</div>

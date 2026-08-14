@@ -1,0 +1,15 @@
+:host { display: block; min-height: 100dvh; }
+.catalog-page { min-height: 100dvh; padding: 2rem 1rem 3rem; background: #f4f1e8; color: #22201d; }
+.catalog-shell { width: min(100%, 68rem); margin: 0 auto; }
+.catalog-header { margin: 2rem 0 2.5rem; }
+.eyebrow { margin: 0 0 .5rem; color: #8b4c31; font-size: .75rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.4rem, 8vw, 4.5rem); line-height: .95; }
+.catalog-intro { margin: 1rem 0 0; color: #69645c; font-size: 1.05rem; }
+.catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1.25rem; }
+.game-card { overflow: hidden; border: 1px solid #d7d0c2; border-radius: 1.25rem; background: #fffdf8; box-shadow: 0 1rem 2rem #4d392018; }
+.game-card-art { display: grid; grid-template-columns: repeat(3, 3rem); justify-content: center; gap: .35rem; padding: 2rem 1rem; background: #d8d5ce; }
+.art-cell { display: grid; aspect-ratio: 1; place-items: center; border: 3px outset #eee; background: #c6c4be; color: #243e9b; font-family: monospace; font-size: 1.4rem; font-weight: 900; }
+.art-cell--blue { color: #26703a; }.art-cell--red { color: #af2e27; }.game-card-content { padding: 1.25rem; }
+.game-card h2 { margin: 0; font-family: Georgia, serif; font-size: 1.75rem; }.game-card p { margin: .4rem 0 1.25rem; color: #69645c; }
+.play-button { display: inline-flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-radius: 999px; background: #22201d; color: #fffdf8; font-weight: 800; text-decoration: none; }.play-button:hover { background: #8b4c31; }
+@media (min-width: 640px) { .catalog-page { padding-inline: 2rem; } }
