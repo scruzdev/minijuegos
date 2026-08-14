@@ -10,6 +10,8 @@ h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.4rem, 8vw, 4.5re
 .game-card-art { display: grid; grid-template-columns: repeat(3, 3rem); justify-content: center; gap: .35rem; padding: 2rem 1rem; background: #d8d5ce; }
 .art-cell { display: grid; aspect-ratio: 1; place-items: center; border: 3px outset #eee; background: #c6c4be; color: #243e9b; font-family: monospace; font-size: 1.4rem; font-weight: 900; }
 .art-cell--blue { color: #26703a; }.art-cell--red { color: #af2e27; }.game-card-content { padding: 1.25rem; }
+.game-card-art--snake { grid-template-columns: repeat(4, 2.35rem); align-items: center; background: #aab99a; }
+.snake-art-cell { width: 2.35rem; aspect-ratio: 1; border: 2px solid #465440; background: #6d855c; }.snake-art-cell--body { margin-left: -1.05rem; }.snake-art-cell--food { width: .85rem; margin-left: .35rem; border-radius: 50%; background: #bf4b3e; }
 .game-card h2 { margin: 0; font-family: Georgia, serif; font-size: 1.75rem; }.game-card p { margin: .4rem 0 1.25rem; color: #69645c; }
 .play-button { display: inline-flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-radius: 999px; background: #22201d; color: #fffdf8; font-weight: 800; text-decoration: none; }.play-button:hover { background: #8b4c31; }
 @media (min-width: 640px) { .catalog-page { padding-inline: 2rem; } }

@@ -6,13 +6,13 @@ Construir una aplicación web que funcione como una colección de minijuegos lig
 
 El usuario debe poder entrar a la aplicación, visualizar un catálogo de juegos disponibles y seleccionar uno para comenzar a jugar inmediatamente.
 
-La primera versión incluirá únicamente:
+El alcance actual incluye:
 
 - Minesweeper / Buscaminas.
+- Snake.
 
 La arquitectura debe permitir añadir nuevos juegos en el futuro, como:
 
-- Snake.
 - Pong.
 - Otros juegos ligeros.
 
@@ -44,13 +44,17 @@ Volver al catálogo
 
 El catálogo irá creciendo progresivamente.
 
-Primera versión:
+Alcance actual:
 
 ```text
 Games
 
 ┌─────────────────┐
 │   Minesweeper   │
+└─────────────────┘
+
+┌─────────────────┐
+│      Snake      │
 └─────────────────┘
 ```
 
@@ -80,7 +84,7 @@ Games
 - Permitir jugar cómodamente desde dispositivos móviles.
 - Mantener también una buena experiencia en escritorio.
 - Crear una estructura que permita añadir nuevos juegos fácilmente.
-- Implementar Minesweeper como primer juego.
+- Mantener Minesweeper como primer juego e implementar Snake como segundo juego.
 - Mantener cada juego aislado de los demás.
 - Separar la lógica específica de cada juego de la lógica general de la plataforma.
 - Mantener el proyecto pequeño y fácil de entender.
@@ -159,7 +163,11 @@ Application
 │
 └── Games
     │
-    └── Minesweeper
+    ├── Minesweeper
+    │   ├── Game Logic
+    │   └── Game UI
+    │
+    └── Snake
         ├── Game Logic
         └── Game UI
 ```
@@ -173,7 +181,7 @@ Responsable de:
 - metadata de cada juego;
 - acceso a los juegos disponibles.
 
-La plataforma no debe conocer la lógica interna de Minesweeper.
+La plataforma no debe conocer la lógica interna de Minesweeper ni Snake.
 
 ### Games
 
@@ -188,11 +196,12 @@ games/
 └── pong/
 ```
 
-Actualmente solo debe existir:
+Actualmente deben existir:
 
 ```text
 games/
-└── minesweeper/
+├── minesweeper/
+└── snake/
 ```
 
 No crear implementaciones vacías de juegos futuros.
@@ -239,6 +248,20 @@ src/
             ├── minesweeper-game.service.ts
             ├── minesweeper.models.ts
             └── minesweeper.config.ts
+        │
+        └── snake/
+            │
+            ├── snake-page.component.ts
+            ├── snake-page.component.html
+            ├── snake-page.component.css
+            │
+            ├── snake-board.component.ts
+            ├── snake-board.component.html
+            ├── snake-board.component.css
+            │
+            ├── snake-game.service.ts
+            ├── snake.models.ts
+            └── snake.config.ts
 ```
 
 Esta estructura es una referencia, no una obligación de crear todos los archivos desde el inicio.
@@ -267,7 +290,7 @@ como la ubicación de las implementaciones de juegos.
 
 Cada juego es dueño de su implementación.
 
-Cuando Snake sea implementado en el futuro:
+La estructura actual debe permitir:
 
 ```text
 games/
@@ -275,7 +298,7 @@ games/
 └── snake/
 ```
 
-Snake no debe requerir cambios en la implementación interna de Minesweeper.
+Snake no debe requerir cambios innecesarios en la implementación interna de Minesweeper, y ambos juegos deben permanecer aislados entre sí.
 
 ### Avoid Premature Shared Layers
 
@@ -327,7 +350,7 @@ Ejemplo conceptual:
 └──────────────────────────┘
 ```
 
-Inicialmente solo existirá Minesweeper.
+El catálogo actual debe mostrar Minesweeper y Snake.
 
 El catálogo debe ser responsive.
 
@@ -366,6 +389,12 @@ export const GAME_REGISTRY: GameDefinition[] = [
     name: 'Minesweeper',
     description: 'Classic Minesweeper',
     route: '/games/minesweeper'
+  },
+  {
+    id: 'snake',
+    name: 'Snake',
+    description: 'Classic Snake',
+    route: '/games/snake'
   }
 ];
 ```
@@ -392,12 +421,14 @@ Rutas principales:
 
 /games/minesweeper
 └── Minesweeper
+
+/games/snake
+└── Snake
 ```
 
 Ejemplo futuro:
 
 ```text
-/games/snake
 /games/pong
 ```
 
@@ -1106,7 +1137,725 @@ minesweeper game logic → DOM
 
 ---
 
-## 40. Future Games
+# Snake
+
+## 40. Snake Overview
+
+Snake será el segundo juego disponible en la plataforma.
+
+Debe estar inspirado en el Snake clásico de los teléfonos Nokia. La intención no es reproducir exactamente una versión concreta, sino conservar su sensación de juego: simple, rápida, retro, basada en cuadrícula y especialmente cómoda en dispositivos móviles.
+
+Debe poder iniciarse rápidamente desde el catálogo, igual que Minesweeper.
+
+---
+
+## 41. Snake Core Gameplay
+
+El jugador controla una serpiente que se mueve continuamente por un tablero basado en cuadrícula.
+
+La serpiente tiene:
+
+- una cabeza;
+- uno o más segmentos de cuerpo;
+- una dirección actual.
+
+Una pieza de comida aparece en una celda libre del tablero.
+
+Cuando la cabeza alcanza la comida:
+
+1. la comida desaparece;
+2. la serpiente aumenta su longitud en un segmento;
+3. aumenta el score;
+4. aumenta progresivamente la velocidad cuando corresponda;
+5. aparece una nueva comida en una celda libre.
+
+El objetivo es conseguir el mayor score posible sin colisionar con el propio cuerpo.
+
+---
+
+## 42. Snake Board
+
+Snake utilizará un tablero lógico fijo de:
+
+```text
+20 × 20
+```
+
+El tamaño lógico será el mismo en móvil, tablet y escritorio.
+
+No crear tamaños diferentes según dispositivo.
+
+El tamaño visual de las celdas debe adaptarse al espacio disponible manteniendo el tablero completo visible siempre que sea razonablemente posible.
+
+---
+
+## 43. Snake Movement
+
+La serpiente se mueve automáticamente una celda por cada tick del game loop.
+
+Direcciones posibles:
+
+```ts
+export type SnakeDirection =
+  | 'up'
+  | 'down'
+  | 'left'
+  | 'right';
+```
+
+La serpiente continúa moviéndose en su dirección actual hasta que:
+
+- el jugador cambia de dirección;
+- la partida se pausa;
+- el jugador pierde;
+- la partida se reinicia.
+
+No se permiten giros directos de 180 grados.
+
+Ejemplos:
+
+```text
+Moving right → left is not allowed
+Moving left  → right is not allowed
+Moving up    → down is not allowed
+Moving down  → up is not allowed
+```
+
+Las entradas inválidas deben ignorarse.
+
+---
+
+## 44. Snake Border Behavior
+
+Los límites del tablero no provocan game over.
+
+La serpiente atraviesa un borde y reaparece automáticamente por el lado opuesto.
+
+```text
+Exit right  → Enter left
+Exit left   → Enter right
+Exit top    → Enter bottom
+Exit bottom → Enter top
+```
+
+La implementación puede utilizar wrapping de coordenadas.
+
+Ejemplo conceptual:
+
+```ts
+nextColumn = (nextColumn + boardWidth) % boardWidth;
+nextRow = (nextRow + boardHeight) % boardHeight;
+```
+
+---
+
+## 45. Snake Collision
+
+La partida termina únicamente cuando la cabeza de la serpiente colisiona con su propio cuerpo.
+
+Los bordes no provocan derrota.
+
+Cuando existe una colisión:
+
+```text
+status = lost
+```
+
+El movimiento debe detenerse inmediatamente.
+
+Después de perder, el jugador debe poder iniciar una nueva partida fácilmente.
+
+---
+
+## 46. Snake Food and Growth
+
+Solo debe existir una comida activa al mismo tiempo.
+
+La comida:
+
+- debe aparecer dentro del tablero;
+- debe aparecer únicamente en una celda libre;
+- nunca debe aparecer encima de la serpiente.
+
+Cada comida consumida aumenta la longitud de la serpiente en un segmento.
+
+El crecimiento debe ocurrir sin interrumpir el movimiento.
+
+La implementación puede conseguirlo evitando eliminar la última posición de la cola durante el tick en el que se consume la comida.
+
+---
+
+## 47. Snake Score
+
+La interfaz debe mostrar el score actual.
+
+Inicialmente:
+
+```text
+1 food = 1 point
+```
+
+El score comienza en:
+
+```text
+0
+```
+
+No implementar:
+
+- high scores persistentes;
+- leaderboard;
+- historial;
+- sincronización;
+- almacenamiento en backend;
+- persistencia mediante `localStorage`.
+
+Salir del juego o recargar la página puede eliminar el score actual.
+
+---
+
+## 48. Progressive Speed
+
+La velocidad debe aumentar gradualmente durante la partida.
+
+La serpiente comienza a una velocidad cómoda. A medida que consume comida, el intervalo entre movimientos debe reducirse progresivamente.
+
+La progresión debe sentirse suave, sin saltos bruscos.
+
+Debe existir una velocidad máxima para evitar que el juego llegue a un punto técnicamente imposible o poco usable.
+
+La configuración debe centralizar:
+
+- tamaño del tablero;
+- velocidad inicial;
+- incremento de velocidad;
+- velocidad máxima.
+
+Ejemplo conceptual:
+
+```ts
+export const SNAKE_CONFIG = {
+  rows: 20,
+  columns: 20,
+  initialTickMs: 200,
+  minimumTickMs: 70,
+  speedIncreaseMs: 5
+};
+```
+
+Los valores concretos de velocidad pueden ajustarse durante la implementación para conseguir una experiencia de juego adecuada.
+
+No dispersar estos valores por distintos componentes.
+
+---
+
+## 49. Snake Game States
+
+Snake utilizará:
+
+```ts
+export type SnakeGameStatus =
+  | 'ready'
+  | 'playing'
+  | 'paused'
+  | 'lost';
+```
+
+### ready
+
+El tablero está preparado pero la partida todavía no ha comenzado.
+
+### playing
+
+La serpiente está moviéndose y la partida está activa.
+
+### paused
+
+La partida está temporalmente detenida.
+
+La posición de la serpiente, comida, score y velocidad deben mantenerse intactos.
+
+### lost
+
+La serpiente ha colisionado con su propio cuerpo y la partida ha terminado.
+
+---
+
+## 50. Snake Game Start
+
+Al entrar a Snake debe mostrarse inmediatamente el tablero preparado.
+
+La partida puede comenzar cuando el jugador realiza la primera entrada válida de dirección.
+
+No debe ser necesario pasar por menús adicionales.
+
+La experiencia debe priorizar comenzar a jugar rápidamente.
+
+---
+
+## 51. Pause and Resume
+
+El jugador debe poder pausar una partida activa.
+
+Cuando:
+
+```text
+status = paused
+```
+
+el game loop debe detenerse.
+
+No debe cambiar:
+
+- posición de la serpiente;
+- posición de la comida;
+- score;
+- velocidad.
+
+Al reanudar:
+
+```text
+paused
+  ↓
+playing
+```
+
+el juego continúa desde exactamente el mismo estado.
+
+Debe existir un control visual `Pause / Resume` que funcione tanto en móvil como en escritorio.
+
+En escritorio pueden utilizarse `Space` o `P` como atajos adicionales si su implementación permanece simple.
+
+---
+
+## 52. Automatic Pause
+
+Snake debe pausarse automáticamente cuando una partida activa deja de estar visiblemente disponible para el jugador.
+
+Esto incluye, cuando sea detectable por el navegador:
+
+- cambiar a otra pestaña;
+- minimizar la ventana;
+- bloquear el teléfono;
+- enviar el navegador a segundo plano;
+- cambios de visibilidad equivalentes.
+
+La implementación debe utilizar APIs estándar del navegador como `document.visibilityState` / `visibilitychange` cuando corresponda.
+
+La pausa automática solo debe aplicarse si el estado actual es:
+
+```text
+playing
+```
+
+Comportamiento:
+
+```text
+playing
+  ↓
+page becomes hidden
+  ↓
+paused
+```
+
+La serpiente, comida, score y velocidad deben conservarse exactamente.
+
+Al volver a la página, la partida debe permanecer en `paused`.
+
+No reanudar automáticamente al recuperar visibilidad.
+
+El usuario debe reanudar manualmente mediante `Resume` o un atajo permitido.
+
+---
+
+## 53. Snake Restart
+
+Debe existir una forma clara de iniciar una partida nueva.
+
+Al reiniciar:
+
+- la serpiente vuelve a su longitud inicial;
+- se restablece su posición;
+- se genera una nueva comida;
+- el score vuelve a cero;
+- la velocidad vuelve al valor inicial;
+- el estado vuelve a `ready`.
+
+---
+
+## 54. Snake Desktop Controls
+
+Los controles principales serán:
+
+```text
+Arrow Up
+Arrow Down
+Arrow Left
+Arrow Right
+```
+
+También pueden soportarse:
+
+```text
+W
+A
+S
+D
+```
+
+si su implementación es simple.
+
+Para pausa pueden utilizarse `Space` o `P` como atajos adicionales.
+
+Debe seguir existiendo un control visual de pausa.
+
+---
+
+## 55. Snake Mobile Controls
+
+Snake debe poder jugarse completamente mediante pantalla táctil.
+
+El control principal será mediante swipe sobre el tablero.
+
+```text
+Swipe up    → Up
+Swipe down  → Down
+Swipe left  → Left
+Swipe right → Right
+```
+
+Movimientos táctiles pequeños o accidentales no deben interpretarse como cambio de dirección.
+
+El tablero debe impedir que un swipe destinado a controlar Snake provoque accidentalmente scroll de la página.
+
+El control de pausa debe poder utilizarse mediante touch.
+
+---
+
+## 56. Snake Input Handling
+
+La lógica del juego no debe conocer el método físico de entrada.
+
+Ejemplo:
+
+```text
+ArrowRight
+    ↓
+UI
+    ↓
+changeDirection('right')
+```
+
+y:
+
+```text
+Swipe right
+    ↓
+UI
+    ↓
+changeDirection('right')
+```
+
+La lógica recibe únicamente la intención:
+
+```ts
+changeDirection('right');
+```
+
+---
+
+## 57. Responsive Snake
+
+Snake debe estar especialmente optimizado para teléfonos móviles.
+
+El tablero completo de `20 × 20` debe:
+
+- permanecer centrado;
+- mantener proporción cuadrada;
+- adaptarse al ancho disponible;
+- utilizar el mayor tamaño razonable posible;
+- mantener todas las celdas del mismo tamaño.
+
+A diferencia de Minesweeper Expert, Snake no debe depender de scroll horizontal para jugar.
+
+---
+
+## 58. Snake Visual Style
+
+Snake debe tener una estética inspirada en los juegos clásicos de Nokia.
+
+Debe sentirse:
+
+- retro;
+- minimalista;
+- simple;
+- inmediatamente reconocible como Snake.
+
+La estética puede inspirarse en:
+
+- pantallas LCD monocromáticas;
+- tonos verdes/grisáceos;
+- serpiente construida mediante bloques;
+- comida pequeña y claramente diferenciada;
+- tipografía pixel-style cuando resulte apropiado;
+- bordes sencillos;
+- interfaz compacta.
+
+No es necesario reproducir:
+
+- un teléfono Nokia completo;
+- carcasa física;
+- teclado físico;
+- logos Nokia;
+- branding Nokia.
+
+La referencia es el lenguaje visual del juego clásico, no una reproducción del dispositivo.
+
+---
+
+## 59. Snake Architecture
+
+Snake debe implementarse como una feature independiente.
+
+Estructura conceptual:
+
+```text
+games/
+├── minesweeper/
+└── snake/
+    │
+    ├── snake-page.component.ts
+    ├── snake-page.component.html
+    ├── snake-page.component.css
+    │
+    ├── snake-board.component.ts
+    ├── snake-board.component.html
+    ├── snake-board.component.css
+    │
+    ├── snake-game.service.ts
+    ├── snake.models.ts
+    └── snake.config.ts
+```
+
+La estructura es orientativa.
+
+No crear archivos separados si no aportan claridad.
+
+---
+
+## 60. Snake State Management
+
+Snake debe utilizar Angular Signals.
+
+No introducir:
+
+- NgRx;
+- Redux;
+- Akita;
+- otra librería externa de state management.
+
+Modelo conceptual:
+
+```ts
+@Injectable()
+export class SnakeGameService {
+  private readonly _snake = signal<Position[]>([]);
+  private readonly _food = signal<Position | null>(null);
+  private readonly _direction = signal<SnakeDirection>('right');
+  private readonly _status = signal<SnakeGameStatus>('ready');
+  private readonly _score = signal(0);
+
+  readonly snake = this._snake.asReadonly();
+  readonly food = this._food.asReadonly();
+  readonly direction = this._direction.asReadonly();
+  readonly status = this._status.asReadonly();
+  readonly score = this._score.asReadonly();
+}
+```
+
+La representación interna puede modificarse si existe una alternativa más clara.
+
+---
+
+## 61. Snake Game Service Responsibilities
+
+Debe encargarse de:
+
+- inicializar la serpiente;
+- generar comida;
+- ejecutar cada tick;
+- mover la serpiente;
+- realizar wrap-around en los bordes;
+- cambiar dirección;
+- bloquear giros de 180 grados;
+- detectar comida;
+- hacer crecer la serpiente;
+- actualizar score;
+- aumentar gradualmente la velocidad;
+- detectar colisiones con el cuerpo;
+- determinar game over;
+- pausar;
+- reanudar;
+- reiniciar.
+
+No debe encargarse de:
+
+- interpretar swipes;
+- escuchar directamente eventos de teclado;
+- manipular DOM;
+- modificar CSS;
+- navegar entre rutas.
+
+La capa de UI puede detectar cambios de visibilidad del navegador y delegar al servicio la intención de pausar.
+
+---
+
+## 62. Snake Game Loop
+
+Snake requiere un loop periódico.
+
+Conceptualmente:
+
+```text
+Every N milliseconds
+        ↓
+Move snake
+        ↓
+Apply border wrapping
+        ↓
+Check food
+        ↓
+Check self collision
+        ↓
+Update state
+        ↓
+Schedule next movement
+```
+
+El intervalo `N` depende de la velocidad actual.
+
+El game loop debe ejecutarse únicamente cuando:
+
+```text
+status === playing
+```
+
+Debe detenerse cuando:
+
+```text
+status === paused
+```
+
+o:
+
+```text
+status === lost
+```
+
+También debe limpiarse correctamente cuando:
+
+- se reinicia;
+- se abandona Snake;
+- se destruye la feature correspondiente.
+
+No deben quedar timers activos después de salir del juego.
+
+---
+
+## 63. Snake Platform Integration
+
+Snake debe aparecer como segundo juego del catálogo.
+
+El Game Registry debe incluir:
+
+```ts
+{
+  id: 'snake',
+  name: 'Snake',
+  description: 'Classic Snake',
+  route: '/games/snake'
+}
+```
+
+Nueva ruta:
+
+```text
+/games/snake
+```
+
+Snake debe utilizar los patrones existentes de:
+
+- navegación;
+- catálogo;
+- game registry;
+- lazy loading.
+
+No modificar innecesariamente la implementación de Minesweeper.
+
+---
+
+## 64. Snake Out of Scope
+
+No implementar inicialmente:
+
+- diferentes tamaños de tablero;
+- selección de dificultad;
+- obstáculos;
+- power-ups;
+- skins;
+- multijugador;
+- leaderboard;
+- high scores persistentes;
+- campañas;
+- vidas múltiples;
+- diferentes tipos de comida;
+- personalización visual avanzada.
+
+---
+
+## 65. Definition of Done — Snake
+
+Snake se considera funcional cuando:
+
+- aparece en el catálogo;
+- existe `/games/snake`;
+- se puede acceder desde el catálogo;
+- se puede regresar al catálogo;
+- utiliza un tablero fijo de `20 × 20`;
+- existe una serpiente inicial;
+- existe una comida;
+- la serpiente se mueve automáticamente;
+- se puede cambiar dirección;
+- no se permiten giros directos de 180 grados;
+- atravesar un borde hace aparecer a la serpiente por el lado opuesto;
+- chocar con un borde no provoca derrota;
+- chocar con el propio cuerpo provoca derrota;
+- comer aumenta la longitud;
+- comer aumenta el score;
+- comer genera una nueva comida;
+- la comida nunca aparece sobre la serpiente;
+- la velocidad aumenta progresivamente;
+- existe una velocidad máxima;
+- se puede pausar;
+- se puede reanudar;
+- pausar conserva completamente el estado actual;
+- una partida activa se pausa automáticamente al cambiar de pestaña, minimizar, bloquear el teléfono o enviar el navegador a segundo plano cuando el navegador lo permita;
+- al recuperar visibilidad la partida permanece pausada hasta que el usuario la reanude manualmente;
+- se puede reiniciar;
+- Arrow Keys funcionan en escritorio;
+- swipes funcionan en móvil;
+- el tablero completo es jugable desde un teléfono;
+- la estética recuerda al Snake clásico de Nokia;
+- Angular Signals gestionan el estado;
+- la lógica permanece separada del DOM;
+- Minesweeper continúa funcionando correctamente.
+
+
+---
+
+## 66. Future Games
+
+Minesweeper y Snake forman parte del alcance actual.
 
 La arquitectura debe permitir añadir nuevos juegos posteriormente.
 
@@ -1136,17 +1885,16 @@ No crear ahora:
 - sistema de plugins;
 - contratos genéricos complejos entre juegos.
 
-Minesweeper y Snake pueden tener lógicas completamente distintas.
+Minesweeper y Snake tienen lógicas independientes y no deben forzarse a compartir una abstracción de motor común.
 
 El único contrato común actualmente necesario es el metadata usado por el catálogo y la navegación.
 
 ---
 
-## 41. Out of Scope — V1
+## 67. Out of Scope — Current Scope
 
 No implementar:
 
-- Snake.
 - Pong.
 - Otros juegos.
 - Backend.
@@ -1166,7 +1914,7 @@ No implementar:
 
 ---
 
-## 42. Development Principles
+## 68. Development Principles
 
 ### Simplicity
 
@@ -1186,13 +1934,13 @@ sin una necesidad actual.
 
 ### Game Isolation
 
-La implementación de Minesweeper debe permanecer dentro de su propia feature.
+La implementación de cada juego debe permanecer dentro de su propia feature.
 
 ### Platform Isolation
 
 El catálogo y navegación pertenecen a la aplicación general.
 
-No deben contener lógica específica del funcionamiento interno de Minesweeper.
+No deben contener lógica específica del funcionamiento interno de Minesweeper ni Snake.
 
 ### AI Development
 
@@ -1224,13 +1972,13 @@ Evitar optimizaciones prematuras.
 
 ---
 
-## 43. AI Agent Architecture Rules
+## 69. AI Agent Architecture Rules
 
 El agente de código debe seguir estas reglas:
 
 1. Preferir la solución Angular más simple que satisfaga el SPECS.
 2. Utilizar standalone components.
-3. Utilizar Angular Signals para el estado de Minesweeper.
+3. Utilizar Angular Signals para el estado de Minesweeper y Snake.
 4. No introducir NgRx u otra librería de estado.
 5. Organizar código por feature.
 6. Mantener código específico de cada juego dentro de su directorio.
@@ -1239,17 +1987,20 @@ El agente de código debe seguir estas reglas:
 9. No dividir UI simple en una cantidad excesiva de componentes.
 10. Mantener reglas de juego independientes del DOM y presentación.
 11. Tratar la interacción móvil como requisito de primera clase.
-12. Mantener long press como gesto móvil para banderas.
-13. No implementar protección del primer click.
-14. No implementar persistencia o scores.
-15. No implementar juegos futuros.
-16. No ampliar el alcance funcional sin que esté especificado.
-17. Si una decisión menor no está especificada, elegir la alternativa más simple y convencional.
-18. Si una decisión afecta arquitectura, comportamiento o alcance, no asumir silenciosamente una solución incompatible con este documento.
+12. Mantener long press como gesto móvil para banderas de Minesweeper.
+13. No implementar protección del primer click de Minesweeper.
+14. Mantener swipe como control móvil principal de Snake.
+15. Mantener wrap-around en los bordes de Snake.
+16. Mantener pausa manual y pausa automática por pérdida de visibilidad en Snake.
+17. No implementar persistencia de scores o partidas.
+18. No implementar juegos futuros fuera del alcance actual.
+19. No ampliar el alcance funcional sin que esté especificado.
+20. Si una decisión menor no está especificada, elegir la alternativa más simple y convencional.
+21. Si una decisión afecta arquitectura, comportamiento o alcance, no asumir silenciosamente una solución incompatible con este documento.
 
 ---
 
-## 44. Definition of Done — Platform V1
+## 70. Definition of Done — Platform
 
 La plataforma se considera funcional cuando:
 
@@ -1257,15 +2008,18 @@ La plataforma se considera funcional cuando:
 - Existe una pantalla principal con catálogo de juegos.
 - El catálogo funciona correctamente en móvil y escritorio.
 - Minesweeper aparece en el catálogo.
+- Snake aparece en el catálogo.
 - Se puede acceder a Minesweeper.
-- Se puede regresar al catálogo.
+- Se puede acceder a Snake.
+- Se puede regresar al catálogo desde ambos juegos.
 - El catálogo obtiene los juegos desde un registro central.
 - La implementación de Minesweeper está aislada de la plataforma.
-- La ruta de Minesweeper puede cargarse como feature independiente.
+- La implementación de Snake está aislada de la plataforma.
+- Las rutas de Minesweeper y Snake pueden cargarse como features independientes.
 
 ---
 
-## 45. Definition of Done — Minesweeper V1
+## 71. Definition of Done — Minesweeper
 
 Minesweeper se considera funcional cuando:
 
@@ -1297,13 +2051,14 @@ Minesweeper se considera funcional cuando:
 
 ---
 
-## 46. Pending Decisions
+## 72. Pending Decisions
 
 Las siguientes decisiones pueden definirse más adelante y no bloquean el inicio del desarrollo:
 
 - Nombre definitivo de la aplicación.
 - Diseño visual definitivo del catálogo.
 - Assets/iconos exactos de Minesweeper.
+- Assets/iconos exactos de Snake.
 - Estrategia de testing.
 - Requisitos avanzados de accesibilidad.
 - Deployment/hosting.

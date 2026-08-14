@@ -6,5 +6,13 @@ export const GAME_REGISTRY: GameDefinition[] = [
     name: 'Minesweeper',
     description: 'Classic Minesweeper',
     route: '/games/minesweeper',
+    image: 'minesweeper',
+  },
+  {
+    id: 'snake',
+    name: 'Snake',
+    description: 'Classic Snake',
+    route: '/games/snake',
+    image: 'snake',
   },
 ];

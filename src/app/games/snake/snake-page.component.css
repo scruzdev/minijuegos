@@ -1,0 +1,11 @@
+:host { display: block; min-height: 100dvh; }
+.snake-page { min-height: 100dvh; padding: 1.25rem 1rem 3rem; background: #d8dfcd; color: #263323; }
+.snake-shell { width: min(100%, 62rem); margin: 0 auto; }
+.back-link { display: inline-block; color: #435a3c; font-weight: 800; text-decoration: none; }.back-link:hover { text-decoration: underline; }
+.snake-heading { margin: 2.5rem 0 1.5rem; }.eyebrow { margin: 0 0 .4rem; color: #526746; font-size: .75rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+h1 { margin: 0; color: #263323; font-family: Georgia, serif; font-size: clamp(2.4rem, 8vw, 4rem); line-height: 1; }.snake-heading p:last-child { margin: .7rem 0 0; color: #526746; }
+.snake-panel { width: min(100%, 36rem); margin-inline: auto; padding: .9rem; border: .35rem solid #34432f; background: #819173; box-shadow: .4rem .4rem 0 #26332333; }
+.snake-topbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; padding: .6rem .7rem; border: .25rem solid #34432f; background: #aab99a; }.screen-label { display: block; color: #526746; font-family: monospace; font-size: .65rem; font-weight: 900; letter-spacing: .15em; }.score-display { display: block; color: #263323; font-family: monospace; font-size: 1.8rem; line-height: 1; }.status-display { color: #526746; font-family: monospace; font-size: .75rem; font-weight: 900; text-transform: uppercase; }
+.snake-controls { display: flex; justify-content: center; gap: .7rem; margin-top: .85rem; }.control-button { padding: .65rem 1rem; border: .2rem solid #263323; background: #aab99a; color: #263323; cursor: pointer; font-family: monospace; font-weight: 900; }.control-button:hover:not(:disabled) { background: #c8d5b9; }.control-button:disabled { cursor: not-allowed; opacity: .55; }.control-button--secondary { background: #607052; color: #eef3e9; }
+.snake-help { min-height: 1.2rem; margin: .8rem .2rem .1rem; color: #34432f; font-family: monospace; font-size: .75rem; text-align: center; }
+@media (min-width: 640px) { .snake-page { padding-inline: 2rem; }.snake-panel { padding: 1rem; } }

@@ -1,0 +1,5 @@
+:host { display: block; width: 100%; }
+.snake-board { --columns: 20; display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); width: min(100%, 32rem); aspect-ratio: 1; margin: 0 auto; padding: .3rem; border: .35rem solid #34432f; background: #607052; box-shadow: inset 0 0 0 .2rem #89987a, .3rem .3rem 0 #1f291c44; touch-action: none; user-select: none; }
+.snake-cell { min-width: 0; min-height: 0; border: 1px solid #718263; background: #aab99a; }
+.snake-cell--body { border-color: #42533c; background: #607a50; }.snake-cell--head { border-color: #263323; background: #344b2d; box-shadow: inset .15rem .15rem 0 #8ba17a; }.snake-cell--food { border: 0; border-radius: 50%; background: #af493c; box-shadow: inset .12rem .12rem 0 #dd8974; }
+.snake-cell--head.snake-cell--food { border-radius: 0; background: #344b2d; }

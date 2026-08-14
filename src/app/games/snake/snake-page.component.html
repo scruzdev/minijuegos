@@ -1,0 +1,35 @@
+<main class="snake-page">
+  <div class="snake-shell">
+    <a class="back-link" routerLink="/">← Back to games</a>
+    <header class="snake-heading">
+      <p class="eyebrow">Pocket arcade</p>
+      <h1>Snake</h1>
+      <p>Guide the snake, eat the food, and keep moving.</p>
+    </header>
+
+    <section class="snake-panel" aria-label="Snake game">
+      <div class="snake-topbar">
+        <div>
+          <span class="screen-label">SCORE</span>
+          <strong class="score-display">{{ game.score() }}</strong>
+        </div>
+        <div class="status-display" aria-live="polite">{{ game.status() }}</div>
+      </div>
+      <app-snake-board />
+      <div class="snake-controls">
+        <button class="control-button" type="button" (click)="game.togglePause()" [disabled]="game.status() === 'ready' || game.status() === 'lost'">
+          {{ game.status() === 'paused' ? 'Resume' : 'Pause' }}
+        </button>
+        <button class="control-button control-button--secondary" type="button" (click)="game.newGame()">Restart</button>
+      </div>
+      <p class="snake-help" aria-live="polite">
+        @switch (game.status()) {
+          @case ('ready') { Use an arrow key or swipe to start. }
+          @case ('playing') { Arrows or swipe to turn. }
+          @case ('paused') { Paused — resume when you are ready. }
+          @case ('lost') { Game over — restart to try again. }
+        }
+      </p>
+    </section>
+  </div>
+</main>

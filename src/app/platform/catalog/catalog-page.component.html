@@ -8,10 +8,14 @@
     <div class="catalog-grid">
       @for (game of games; track game.id) {
         <article class="game-card">
-          <div class="game-card-art" aria-hidden="true">
-            <span class="art-cell">1</span><span class="art-cell art-cell--blue">2</span><span class="art-cell">⚑</span>
-            <span class="art-cell art-cell--red">3</span><span class="art-cell">·</span><span class="art-cell art-cell--blue">1</span>
-            <span class="art-cell">·</span><span class="art-cell">💣</span><span class="art-cell art-cell--red">2</span>
+          <div class="game-card-art" [class.game-card-art--snake]="game.image === 'snake'" aria-hidden="true">
+            @if (game.image === 'snake') {
+              <span class="snake-art-cell"></span><span class="snake-art-cell snake-art-cell--body"></span><span class="snake-art-cell snake-art-cell--body"></span><span class="snake-art-cell snake-art-cell--food"></span>
+            } @else {
+              <span class="art-cell">1</span><span class="art-cell art-cell--blue">2</span><span class="art-cell">⚑</span>
+              <span class="art-cell art-cell--red">3</span><span class="art-cell">·</span><span class="art-cell art-cell--blue">1</span>
+              <span class="art-cell">·</span><span class="art-cell">💣</span><span class="art-cell art-cell--red">2</span>
+            }
           </div>
           <div class="game-card-content">
             <h2>{{ game.name }}</h2>

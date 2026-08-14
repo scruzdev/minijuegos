@@ -15,5 +15,12 @@ export const routes: Routes = [
         (module) => module.MinesweeperPageComponent,
       ),
   },
+  {
+    path: 'games/snake',
+    loadComponent: () =>
+      import('./games/snake/snake-page.component').then(
+        (module) => module.SnakePageComponent,
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];

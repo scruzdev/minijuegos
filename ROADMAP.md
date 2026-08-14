@@ -1,6 +1,6 @@
 # Roadmap de implementación
 
-Este roadmap parte del proyecto actual: un scaffold de Angular 22 con Tailwind CSS configurado y sin features, rutas de producto ni lógica de juego. Las etapas se ejecutarán en orden para mantener el alcance de V1 y evitar abstracciones anticipadas.
+Las etapas 0 a 6 recogen la implementación ya completada de la plataforma y Minesweeper. La etapa 7 incorpora Snake como segundo juego, respetando la misma organización por feature y evitando abstracciones anticipadas.
 
 ## Etapa 0 — Preparación del scaffold
 
@@ -78,11 +78,75 @@ Este roadmap parte del proyecto actual: un scaffold de Angular 22 con Tailwind C
 
 **Resultado:** cumplimiento de las definiciones de terminado de Platform V1 y Minesweeper V1 indicadas en `SPECS.md`.
 
+## Etapa 7 — Snake como segundo juego
+
+### 7.1 — Integración de plataforma
+
+- Añadir la metadata de Snake al Game Registry con id, nombre, descripción y ruta /games/snake.
+- Crear la ruta lazy de Snake usando el mismo patrón de Angular Router que Minesweeper.
+- Hacer que el catálogo muestre ambas tarjetas desde el registro, sin condicionar el template a un juego concreto.
+- Proporcionar una navegación visible de vuelta al catálogo desde la página de Snake.
+
+**Resultado:** se puede recorrer catálogo → Snake → catálogo y Minesweeper permanece aislado e intacto.
+
+### 7.2 — Feature, modelos y estado inicial
+
+- Crear games/snake/ con modelos, configuración, servicio y los componentes de página/tablero que aporten claridad.
+- Centralizar el tablero fijo de 20 × 20 y los valores de velocidad inicial, incremento y velocidad máxima en la configuración de Snake.
+- Definir posiciones, direcciones y estados ready, playing, paused y lost dentro de la feature.
+- Crear un servicio de Snake provisto por la feature y gestionado con Angular Signals para serpiente, comida, dirección, estado, score y velocidad.
+- Inicializar una serpiente corta y una comida en una celda libre al entrar o reiniciar, sin persistencia.
+
+**Resultado:** Snake tiene un tablero preparado inmediatamente y un estado propio, independiente de Minesweeper, del DOM y del catálogo.
+
+### 7.3 — Reglas, movimiento y game loop
+
+- Implementar el loop de juego únicamente mientras el estado sea playing; limpiarlo al pausar, perder, reiniciar, abandonar o destruir la feature.
+- Mover la serpiente una celda por tick en su dirección actual.
+- Aplicar wrap-around en las cuatro fronteras; los bordes no causan derrota.
+- Ignorar los giros directos de 180 grados.
+- Detectar la colisión de la cabeza con el propio cuerpo, cambiar a lost y detener el loop inmediatamente.
+- Generar comida solo en celdas libres, crecer sin eliminar la cola al comer, aumentar el score y crear una nueva comida.
+- Reducir el intervalo de tick gradualmente por comida hasta la velocidad máxima permitida.
+
+**Resultado:** el juego central de Snake funciona de forma determinista y sus reglas viven exclusivamente en el servicio.
+
+### 7.4 — Controles y ciclo de vida
+
+- Conectar Arrow Keys como controles de escritorio y admitir W/A/S/D si se mantiene simple.
+- Implementar el botón visible de Pause / Resume y los atajos opcionales Space o P.
+- Pausar automáticamente una partida activa al recibir visibilitychange con la página oculta; conservar el estado y exigir reanudación manual al volver.
+- Detectar swipes sobre el tablero para móvil, con umbral de distancia y dirección dominante.
+- Evitar que un swipe de control provoque scroll accidental de la página.
+- Mantener la interpretación de teclado, swipe y visibilidad en los componentes; el servicio recibirá únicamente intenciones como cambio de dirección, pausa o reanudación.
+
+**Resultado:** Snake se controla íntegramente con teclado o touch y conserva correctamente una partida pausada.
+
+### 7.5 — UI retro y responsive
+
+- Crear una página compacta con score, estado, reinicio, Pause / Resume y acceso al catálogo.
+- Renderizar un tablero 20 × 20 centrado, cuadrado y completamente visible sin scroll horizontal en teléfono.
+- Adaptar solo el tamaño visual de las celdas al viewport, manteniendo las 20 × 20 celdas lógicas en todos los dispositivos.
+- Aplicar una estética Nokia inspirada en LCD: paleta verde/gris, bloques para serpiente, comida distinguible, bordes simples y tipografía retro cuando aporte valor.
+- Verificar la usabilidad en móvil, tablet y escritorio sin afectar el estilo retro de Minesweeper.
+
+**Resultado:** Snake es reconocible, rápido de iniciar y cómodo en una pantalla táctil.
+
+### 7.6 — Validación de alcance
+
+- Añadir pruebas unitarias de configuración, dirección, wrap-around, colisión, crecimiento, comida, score, velocidad y pausa/reanudación.
+- Ejecutar build de producción y pruebas de la aplicación.
+- Comprobar manualmente catálogo, navegación, teclado, swipe, pausa por visibilidad y layout responsive de Snake.
+- Volver a validar todas las funciones existentes de Minesweeper: rutas, dificultades, flags, revelado, temporizador, reinicio y contenedor responsive.
+- Confirmar que no se hayan introducido persistencia, dificultades de Snake, obstáculos, power-ups, Pong ni capas genéricas de motor de juegos.
+
+**Resultado:** se cumplen las definiciones de terminado de Snake y de la plataforma actualizada, preservando Minesweeper.
+
 ## Límites arquitectónicos durante todas las etapas
 
 - No crear directorios globales como `core/`, `shared/`, `utils/`, `common/`, `services/` o `stores/` sin una necesidad real ya presente.
 - No crear `GameEngine`, `BaseGame`, `AbstractGame`, plugins ni contratos genéricos para juegos hipotéticos.
-- No implementar Snake, Pong ni placeholders de juegos futuros.
-- Mantener toda la lógica y UI específicas dentro de `games/minesweeper/`.
+- No implementar Pong ni placeholders de juegos futuros.
+- Mantener toda la lógica y UI específicas dentro de su propia feature: `games/minesweeper/` o `games/snake/`.
 - Mantener `platform/` limitado al catálogo, navegación y metadata de juegos.
 - No incorporar persistencia local, backend ni funcionalidades de puntuación en V1.

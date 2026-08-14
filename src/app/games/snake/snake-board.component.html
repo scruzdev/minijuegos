@@ -1,0 +1,18 @@
+<div
+  class="snake-board"
+  [style.--columns]="game.board().columns"
+  role="grid"
+  tabindex="0"
+  aria-label="Snake game board. Swipe to change direction."
+  (pointerdown)="onPointerDown($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerCancel()"
+>
+  @for (cell of cells; track cell.key) {
+    <div
+      [class]="cellClass(cell)"
+      role="gridcell"
+      [attr.aria-label]="cellLabel(cell)"
+    ></div>
+  }
+</div>

@@ -1,31 +1,19 @@
 # Minijuegos
 
-Aplicación web de minijuegos rápidos, pensada primero para usarse desde un navegador móvil y también cómoda en tablet y escritorio. La primera versión incluirá únicamente **Buscaminas (Minesweeper)**, con una arquitectura sencilla que permita sumar nuevos juegos más adelante sin acoplarlos entre sí.
+Aplicación web de minijuegos rápidos, pensada primero para usarse desde un navegador móvil y también cómoda en tablet y escritorio. El alcance actual incluye Buscaminas (Minesweeper) y Snake, con una arquitectura simple que permite sumar juegos futuros sin acoplarlos entre sí.
 
-## Experiencia final
+## Experiencia
 
-Al abrir la aplicación, la ruta `/` mostrará un catálogo de juegos responsive. Cada juego aparecerá como una tarjeta con una representación visual, nombre, descripción breve y una acción para jugar. En esta versión el catálogo tendrá una sola tarjeta: **Minesweeper — Classic Minesweeper**.
+La ruta principal / muestra un catálogo responsive. Cada tarjeta contiene una representación visual, nombre, descripción y acceso para jugar. El catálogo incluye:
 
-La tarjeta llevará a `/games/minesweeper`. Desde esa pantalla habrá una acción clara para volver al catálogo.
+- Minesweeper — Classic Minesweeper, disponible en /games/minesweeper.
+- Snake — Classic Snake, disponible en /games/snake.
 
-La interfaz deberá adaptarse al espacio disponible:
-
-- En móvil, el catálogo mostrará tarjetas cómodas en una columna.
-- En tablet y escritorio, el catálogo podrá crecer a varias columnas cuando existan más juegos.
-- La pantalla del juego mantendrá los controles dentro del viewport.
-- Los tableros que no quepan, especialmente Intermediate y Expert en móvil, se desplazarán dentro de su propio contenedor; la página no tendrá scroll horizontal provocado por el tablero.
+Cada juego ofrece una acción clara para volver al catálogo. En móvil las tarjetas aparecen en una columna; en espacios mayores el catálogo puede crecer a varias columnas.
 
 ## Buscaminas
 
-El juego estará inspirado en el Buscaminas clásico de Windows: fondo gris, bordes con relieve, celdas elevadas mientras están ocultas, celdas planas al revelarse, números por color, contadores digitales y un botón de reinicio con cara.
-
-La pantalla incluirá:
-
-- Selector de dificultad: Beginner, Intermediate y Expert.
-- Contador de minas restantes (`minas totales - banderas colocadas`).
-- Temporizador en segundos.
-- Botón central de reinicio, que conserva la dificultad y genera una partida nueva.
-- Tablero y acceso para volver al catálogo.
+Minesweeper está inspirado en el Buscaminas clásico de Windows: panel gris, bordes con relieve, celdas elevadas u ocultas, celdas planas reveladas, números por color, contadores digitales y reinicio con cara.
 
 | Dificultad | Tablero | Minas |
 | --- | --- | ---: |
@@ -33,67 +21,79 @@ La pantalla incluirá:
 | Intermediate | 16 × 16 | 40 |
 | Expert | 30 × 16 | 99 |
 
-### Cómo se juega
+La pantalla incluye selector de dificultad, contador de minas restantes, temporizador, reinicio, tablero y retorno al catálogo.
 
-- En escritorio, clic izquierdo revela una celda y clic derecho coloca o quita una bandera, sin abrir el menú contextual del navegador.
-- En móvil, un toque revela una celda y una pulsación prolongada de aproximadamente 500 ms coloca o quita una bandera.
-- La pulsación prolongada se cancelará al desplazarse, mover el puntero de forma significativa o cancelar la interacción, para evitar banderas accidentales.
-- Las celdas vacías expanden automáticamente su zona y revelan las celdas numeradas del borde.
-- Una partida se gana al revelar todas las celdas sin minas; no es necesario marcar todas las minas.
-- Al revelar una mina se pierde, se muestran las minas y el tablero deja de aceptar acciones.
-- El primer clic **no está protegido**: puede revelar una mina y terminar la partida.
-- El temporizador comienza con la primera acción de juego y se detiene al ganar o perder.
+- En escritorio, clic izquierdo revela y clic derecho coloca o quita una bandera.
+- En móvil, un toque revela y una pulsación prolongada de aproximadamente 500 ms alterna una bandera.
+- Las celdas vacías expanden automáticamente su zona.
+- La partida se gana al revelar todas las celdas sin minas y se pierde al revelar una mina.
+- El primer clic no está protegido y puede contener una mina.
+- Intermediate y Expert se desplazan dentro de su propio contenedor cuando no caben, sin provocar scroll horizontal de toda la página.
 
-No habrá cuentas, backend, puntuaciones, mejores tiempos, historial ni persistencia. Salir del juego o recargar la página puede descartar la partida actual.
+## Snake
 
-## Arquitectura prevista
+Snake será el segundo juego de la plataforma y estará inspirado en la sensación retro, rápida y minimalista de los teléfonos Nokia clásicos. Tendrá un tablero lógico fijo de 20 × 20, cuadrado, centrado y completamente usable en teléfono, tablet y escritorio; no dependerá de scroll horizontal.
 
-El código se organizará por feature y con componentes standalone de Angular. La plataforma conocerá el catálogo, la navegación y los metadatos de los juegos; cada juego será dueño de sus propios componentes, modelos, lógica y estilos.
+La partida se iniciará al recibir la primera dirección válida. La serpiente se moverá continuamente, atravesará los bordes para reaparecer por el lado opuesto y solo terminará al chocar con su propio cuerpo. Comer una comida en una celda libre aumentará la longitud, sumará un punto, generará una nueva comida y elevará gradualmente la velocidad hasta un máximo usable.
 
-```text
-src/app/
-├── platform/
-│   ├── catalog/
-│   ├── game-definition.model.ts
-│   └── game-registry.ts
-└── games/
-    └── minesweeper/
-        ├── minesweeper-page.component.*
-        ├── minesweeper-board.component.*
-        ├── minesweeper-game.service.ts
-        ├── minesweeper.models.ts
-        └── minesweeper.config.ts
-```
+La pantalla incluirá score, reinicio, Pause / Resume y retorno al catálogo.
 
-El catálogo se construirá a partir de un registro central de definiciones de juego. Añadir un juego futuro consistirá en crear su feature y ruta, y agregar su metadata al registro. No se crearán ahora juegos vacíos, una capa genérica de motores de juego ni un sistema de plugins.
+- En escritorio, las flechas controlan la dirección; W/A/S/D y Space o P pueden estar disponibles como atajos sencillos.
+- En móvil, un swipe claro sobre el tablero cambia de dirección; los movimientos breves no se interpretan como controles.
+- No se permiten giros directos de 180 grados.
+- Una partida activa se pausa automáticamente al ocultarse la página y permanece pausada hasta que el jugador la reanude manualmente.
+- La interfaz usará una estética LCD retro: tonos verdes/grisáceos, bloques para la serpiente, comida distinguible y controles compactos.
 
-El estado y las reglas de Buscaminas vivirán en un servicio propio de la feature y usarán Angular Signals. La UI detectará clics, taps y long press, pero delegará las acciones y reglas al servicio. La lógica del juego no manipulará el DOM ni dependerá del catálogo.
+No habrá tamaños de tablero alternativos, obstáculos, power-ups, skins, high scores, leaderboard ni persistencia.
+
+## Arquitectura
+
+El código se organiza por feature y usa componentes standalone de Angular. La plataforma contiene catálogo, navegación y metadata de juegos. Cada juego posee sus propios modelos, configuración, servicio, UI y estilos.
+
+    src/app/
+    ├── platform/
+    │   ├── catalog/
+    │   ├── game-definition.model.ts
+    │   └── game-registry.ts
+    └── games/
+        ├── minesweeper/
+        │   ├── minesweeper-page.component.*
+        │   ├── minesweeper-board.component.*
+        │   ├── minesweeper-game.service.ts
+        │   ├── minesweeper.models.ts
+        │   └── minesweeper.config.ts
+        └── snake/
+            ├── snake-page.component.*
+            ├── snake-board.component.*
+            ├── snake-game.service.ts
+            ├── snake.models.ts
+            └── snake.config.ts
+
+El catálogo se genera desde un Game Registry central. Minesweeper y Snake mantienen servicios y reglas independientes que usan Angular Signals. La UI interpreta clics, taps, long press, teclado, swipe o visibilidad y delega únicamente intenciones al servicio de su juego. Ninguna lógica de juego manipula el DOM ni depende del catálogo.
+
+No se crearán GameEngine, BaseGame, AbstractGame, un sistema de plugins ni capas globales prematuras.
 
 ## Tecnologías
 
 - Angular 22, TypeScript y componentes standalone.
-- Angular Router para la navegación y carga diferida cuando resulte práctica.
-- Angular Signals para el estado de Buscaminas.
-- Tailwind CSS para layout y estilos generales; CSS específico para el aspecto retro del juego.
-- Angular Material solo si aporta valor claro a algún control general de interfaz.
+- Angular Router para navegación y carga diferida de features.
+- Angular Signals para el estado de Minesweeper y Snake.
+- Tailwind CSS para layout y estilos generales; CSS específico para cada juego.
+- Angular Material solo cuando simplifique claramente un control general de interfaz.
 
 ## Desarrollo local
 
 Requisitos: Node.js y npm.
 
-```bash
-npm install
-npm start
-```
+    npm install
+    npm start
 
-La aplicación quedará disponible en `http://localhost:4200/`.
+La aplicación queda disponible en http://localhost:4200/.
 
 Para generar una compilación de producción:
 
-```bash
-npm run build
-```
+    npm run build
 
-## Alcance de V1
+## Alcance actual
 
-Incluye la plataforma con catálogo y Buscaminas. Quedan explícitamente fuera de esta versión Snake, Pong, otros juegos, dificultad personalizada, autenticación, backend, base de datos, multiplayer, panel administrativo, monetización y funcionalidades persistentes.
+Incluye la plataforma con catálogo, Minesweeper y Snake. Quedan fuera Pong, otros juegos, dificultad personalizada de Minesweeper, variantes avanzadas de Snake, autenticación, backend, base de datos, multiplayer, panel administrativo, monetización y funcionalidades persistentes.
